@@ -2,6 +2,8 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 
+st.set_page_config(page_title="Multi-Echelon Demo")
+
 # Function to calculate safety stock
 def calculate_safety_stock(demand_mean, demand_std, lead_time, service_level):
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
