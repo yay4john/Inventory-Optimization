@@ -4,6 +4,14 @@ import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Single Echelon Demo")
 
+st.markdown("# SEIO Fundamentals")
+st.sidebar.header("Single Echelon Demo")
+st.write(
+    """
+    Develop a model to calculate safety stock. Research and apply appropriate methods to determine safety stock levels under varying conditions.
+"""
+)
+
 # Function to calculate safety stock
 def calculate_safety_stock(demand_mean, demand_std, lead_time, service_level):
     z_scores = {90: 1.28, 95: 1.65, 99: 2.33}
