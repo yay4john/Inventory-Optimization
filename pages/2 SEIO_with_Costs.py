@@ -29,6 +29,11 @@ def calculate_inventory_cost(safety_stock, holding_cost_per_unit, order_cost, de
     ordering_cost = (demand_mean / order_quantity) * order_cost
     return holding_cost + ordering_cost
 
+# Function to calculate stock-out cost
+def calculate_stock_out_cost(stock_out_cost_per_unit, safety_stock, demand_mean):
+    expected_stockouts = max(0, demand_mean - safety_stock)
+    return expected_stockouts * stock_out_cost_per_unit
+
 # Streamlit UI Setup
 st.title("Inventory Optimization Tool")
 st.sidebar.header("Input Parameters")
@@ -42,18 +47,21 @@ service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max
 holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0.01, value=1.0)
 order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=1.0, value=50.0)
 order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=750)
+stock_out_cost_per_unit = st.sidebar.number_input("Stock-Out Cost per Unit ($)", min_value=0.01, value=5.0)
 
 # Compute Safety Stock and Reorder Point
 safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)
 reorder_point = calculate_reorder_point(demand_mean, lead_time, safety_stock)
 inventory_cost = calculate_inventory_cost(safety_stock, holding_cost_per_unit, order_cost, demand_mean, order_quantity)
+stock_out_cost = calculate_stock_out_cost(stock_out_cost_per_unit, safety_stock, demand_mean)
 
 st.write(f"### Recommended Safety Stock: {round(safety_stock)} units")
 st.write(f"### Reorder Point: {round(reorder_point)} units")
 st.write(f"### Estimated Annual Inventory Cost: ${round(inventory_cost, 2)}")
+st.write(f"### Estimated Stock-Out Cost: ${round(stock_out_cost, 2)}")
 
 # Visualization
-fig, axes = plt.subplots(2, 2, figsize=(12, 8), gridspec_kw={'height_ratios': [1, 1.5]})
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
 
 # Demand Distribution Plot
 x = np.linspace(demand_mean - 3*demand_std, demand_mean + 3*demand_std, 100)
@@ -71,17 +79,19 @@ axes[0, 1].axvline(lead_time, color='r', linestyle='--', label="Mean Lead Time")
 axes[0, 1].set_title("Lead Time Distribution")
 axes[0, 1].legend()
 
-# Inventory Bar Chart - Full Bottom Row
-ax_big = fig.add_subplot(2, 1, 2)
-ax_big.bar(["Inventory"], [order_quantity], color='lightblue', label="Cycle Stock")
-ax_big.bar(["Inventory"], [safety_stock], bottom=[order_quantity], color='green', label="Safety Stock")
-ax_big.axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
-ax_big.set_title("Average Inventory Composition")
-ax_big.legend()
-ax_big.set_xlim(-1, 1)
+# Inventory Bar Chart
+axes[1, 0].bar(["Inventory"], [order_quantity], color='lightblue', label="Cycle Stock")
+axes[1, 0].bar(["Inventory"], [safety_stock], bottom=[order_quantity], color='green', label="Safety Stock")
+axes[1, 0].axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
+axes[1, 0].set_title("Average Inventory Composition")
+axes[1, 0].set_xlim(-1, 1)
+axes[1, 0].legend()
 
-fig.delaxes(axes[1, 1])  # Remove the empty subplot
-fig.delaxes(axes[1, 0])  
+# Cost Comparison Bar Chart
+axes[1, 1].barh(["Holding Cost", "Stock-Out Cost"], [inventory_cost, stock_out_cost], color=['blue', 'red'])
+axes[1, 1].set_title("Cost Comparison")
+axes[1, 1].set_xlabel("Cost ($)")
+
 plt.tight_layout()
 st.pyplot(fig)
 
