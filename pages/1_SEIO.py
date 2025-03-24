@@ -33,7 +33,7 @@ demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, v
 lead_time = st.sidebar.number_input("Lead Time (days)", min_value=1, value=5)
 lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=2)
 service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max_value=99.99, value=95.0)
-order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=500)
+order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=750)
 
 # Compute Safety Stock and Reorder Point
 safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)
@@ -68,6 +68,7 @@ ax_big.bar(["Inventory"], [safety_stock], bottom=[order_quantity], color='green'
 ax_big.axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
 ax_big.set_title("Average Inventory Composition")
 ax_big.legend()
+ax_big.set_xlim(-1, 1)
 
 fig.delaxes(axes[1, 1])  # Remove the empty subplot
 fig.delaxes(axes[1, 0])  
