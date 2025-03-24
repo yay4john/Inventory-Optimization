@@ -33,6 +33,7 @@ demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, v
 lead_time = st.sidebar.number_input("Lead Time (days)", min_value=1, value=5)
 lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=2)
 service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max_value=99.99, value=95.0)
+order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=500)
 
 # Compute Safety Stock and Reorder Point
 safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)
@@ -61,7 +62,7 @@ axes[0, 1].set_title("Lead Time Distribution")
 axes[0, 1].legend()
 
 # Inventory Bar Chart
-axes[1, 0].bar(["Inventory"], color='lightblue', label="Cycle Stock")
+axes[1, 0].bar(["Inventory"], [order_quantity], color='lightblue', label="Cycle Stock")
 axes[1, 0].bar(["Inventory"], [safety_stock], color='green', label="Safety Stock")
 axes[1, 0].axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
 axes[1, 0].set_title("Average Inventory Composition")
