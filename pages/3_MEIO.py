@@ -62,7 +62,7 @@ st.write(f"### Reorder Point: {round(reorder_point)} units")
 st.write(f"### Estimated Annual Inventory Cost: ${round(inventory_cost, 2)}")
 
 # Visualization
-fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+fig, axes = plt.subplots(2, 2, figsize=(12, 8), gridspec_kw={'height_ratios': [1, 1.5]})
 
 # Demand Distribution Plot
 x = np.linspace(demand_mean - 3*demand_std, demand_mean + 3*demand_std, 100)
@@ -80,14 +80,16 @@ axes[0, 1].axvline(lead_time, color='r', linestyle='--', label="Mean Lead Time")
 axes[0, 1].set_title("Lead Time Distribution")
 axes[0, 1].legend()
 
-# Inventory Bar Chart
-axes[1, 0].bar(["Inventory"], [order_quantity], color='lightblue', label="Cycle Stock")
-axes[1, 0].bar(["Inventory"], [safety_stock], bottom=[order_quantity], color='green', label="Safety Stock")
-axes[1, 0].axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
-axes[1, 0].set_title("Average Inventory Composition")
-axes[1, 0].legend()
+# Inventory Bar Chart - Full Bottom Row
+ax_big = fig.add_subplot(2, 1, 2)
+ax_big.bar(["Inventory"], [order_quantity], color='lightblue', label="Cycle Stock")
+ax_big.bar(["Inventory"], [safety_stock], bottom=[order_quantity], color='green', label="Safety Stock")
+ax_big.axhline(reorder_point, color='r', linestyle='--', label="Reorder Point")
+ax_big.set_title("Average Inventory Composition")
+ax_big.legend()
 
 fig.delaxes(axes[1, 1])  # Remove the empty subplot
+fig.delaxes(axes[1, 0])  
 plt.tight_layout()
 st.pyplot(fig)
 
