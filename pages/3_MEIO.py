@@ -45,17 +45,17 @@ simulation_days = st.sidebar.number_input("Simulation Days", min_value=10, max_v
 # Echelon 1 Table
 echelon1_df = pd.DataFrame(columns=['Warehouse', 'Holding $/Unit'])
 st.write("### Echelon 1: Warehouses")
-st.experimental_data_editor(echelon1_df)
+st.data_editor(echelon1_df)
 
 # Echelon 2 Table
 echelon2_df = pd.DataFrame(columns=['Customer', 'Avg. Demand', 'St. Dev. Demand', 'Holding $/Unit', 'Stock Out $/Unit', 'Service Level'])
 st.write("### Echelon 2: Customers")
-st.experimental_data_editor(echelon2_df)
+st.data_editor(echelon2_df)
 
 # Network Table
 network_df = pd.DataFrame(columns=['Warehouse', 'Customer', 'Order Cost', 'Avg. Lead Time', 'St. Dev. Lead Time'])
 st.write("### Network Configuration")
-st.experimental_data_editor(network_df)
+st.data_editor(network_df)
 
 # Compute Safety Stock and Reorder Point
 safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)
