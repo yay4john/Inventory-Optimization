@@ -43,7 +43,7 @@ demand_mean = st.sidebar.number_input("Average Demand per Period", min_value=1, 
 demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=10)
 lead_time = st.sidebar.number_input("Lead Time (days)", min_value=0, value=3)
 lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=1)
-service_level = st.sidebar.number_input("Service Level (%)", min_value=0, max_value=99.99, value=95.0)
+service_level = st.sidebar.number_input("Service Level (%)", min_value=0.01, max_value=99.99, value=95.0)
 holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0, value=1.0)
 order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=0, value=5.0)
 order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=200)
