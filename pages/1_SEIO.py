@@ -28,13 +28,13 @@ st.title("Inventory Optimization Tool")
 st.sidebar.header("Input Parameters")
 
 # User Inputs
-demand_mean = st.sidebar.number_input("Average Demand per Period", min_value=1, value=100)
-demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=20)
-lead_time = st.sidebar.number_input("Lead Time (days)", min_value=1, value=5)
-lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=2)
+demand_mean = st.sidebar.number_input("Average Demand per Day", min_value=1, value=5)
+demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=1)
+lead_time = st.sidebar.number_input("Lead Time (days)", min_value=1, value=2)
+lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=1)
 service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max_value=99.99, value=95.0)
-order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=750)
-simulation_days = st.sidebar.number_input("Simulation Days", min_value=10, max_value=365, value=40)
+order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=35)
+simulation_days = st.sidebar.number_input("Simulation Days", min_value=10, max_value=365, value=20)
 
 # Compute Safety Stock and Reorder Point
 safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)

@@ -39,14 +39,14 @@ st.title("Inventory Optimization Tool")
 st.sidebar.header("Input Parameters")
 
 # User Inputs
-demand_mean = st.sidebar.number_input("Average Demand per Period", min_value=1, value=50)
-demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=10)
-lead_time = st.sidebar.number_input("Lead Time (days)", min_value=0, value=3)
+demand_mean = st.sidebar.number_input("Average Demand per Day", min_value=1, value=5)
+demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=1)
+lead_time = st.sidebar.number_input("Lead Time (days)", min_value=0, value=2)
 lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=1)
 service_level = st.sidebar.number_input("Service Level (%)", min_value=0.01, max_value=99.99, value=95.0)
-holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0.01, value=1.0)
-order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=0.01, value=5.0)
-order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=200)
+holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0.01, value=50)
+order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=0.01, value=3.0)
+order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=35)
 stock_out_cost_per_unit = st.sidebar.number_input("Stock-Out Cost per Unit ($)", min_value=0.01, value=2.5)
 simulation_days = st.sidebar.number_input("Simulation Days", min_value=1, max_value=365, value=20)
 
@@ -55,7 +55,7 @@ safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, serv
 reorder_point = calculate_reorder_point(demand_mean, lead_time, safety_stock)
 inventory_cost = calculate_inventory_cost(safety_stock, holding_cost_per_unit, order_cost, demand_mean, order_quantity)
 stock_out_cost = calculate_stock_out_cost(stock_out_cost_per_unit, safety_stock, demand_mean)
-eoq = np.sqrt((2 * demand_mean * order_cost) / holding_cost_per_unit)
+eoq = np.sqrt((2 * demand_mean * 365 * order_cost) / holding_cost_per_unit)
 
 st.write(f"### Recommended Safety Stock: {round(safety_stock)} units")
 st.write(f"### Reorder Point: {round(reorder_point)} units")
@@ -101,7 +101,7 @@ axes[1].set_xlabel("Cost ($)")
 # EOQ Tradeoff Chart
 quantity = np.linspace(1, eoq*1.5, 100)
 holding_cost = (holding_cost_per_unit * quantity)/2
-ordering_cost = (order_cost*demand_mean) / quantity
+ordering_cost = (order_cost*demand_mean*365) / quantity
 total_cost = holding_cost + ordering_cost
 
 axes[2].plot(quantity, holding_cost, label="Holding Cost", color='blue')
