@@ -1,3 +1,9 @@
+import streamlit as st
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as stats
+import pandas as pd
+
 # Function to calculate safety stock incorporating lead time variability
 def calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level):
     z = stats.norm.ppf(service_level / 100)  # Convert service level percentage to Z-score
