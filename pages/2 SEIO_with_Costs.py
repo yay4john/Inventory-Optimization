@@ -47,7 +47,7 @@ service_level = st.sidebar.number_input("Service Level (%)", min_value=0.01, max
 holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0.01, value=1.0)
 order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=0.01, value=5.0)
 order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=200)
-stock_out_cost_per_unit = st.sidebar.number_input("Stock-Out Cost per Unit ($)", min_value=0, value=2.5)
+stock_out_cost_per_unit = st.sidebar.number_input("Stock-Out Cost per Unit ($)", min_value=0.01, value=2.5)
 simulation_days = st.sidebar.number_input("Simulation Days", min_value=1, max_value=365, value=20)
 
 # Compute Safety Stock and Reorder Point
