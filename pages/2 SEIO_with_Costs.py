@@ -64,7 +64,7 @@ st.write(f"### Estimated Stock-Out Cost: ${round(stock_out_cost, 2)}")
 st.write(f"### Economic Order Quantity: ${round(eoq, 2)}")
 
 # Visualization
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+fig, axes = plt.subplots(3, 1, figsize=(8, 15))
 
 # Inventory Line Plot Simulation with Lead Time
 inventory_levels = []
