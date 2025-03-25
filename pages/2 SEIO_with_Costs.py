@@ -100,8 +100,8 @@ axes[1].set_xlabel("Cost ($)")
 
 # EOQ Tradeoff Chart
 quantity = np.linspace(1, eoq*1.5, 100)
-holding_cost = (holding_cost_per_unit * quantity)
-ordering_cost = order_cost / quantity
+holding_cost = (holding_cost_per_unit * quantity)/2
+ordering_cost = (order_cost*demand_mean) / quantity
 total_cost = holding_cost + ordering_cost
 
 axes[2].plot(quantity, holding_cost, label="Holding Cost", color='blue')
