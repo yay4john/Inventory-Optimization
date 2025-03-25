@@ -61,7 +61,7 @@ st.write(f"### Recommended Safety Stock: {round(safety_stock)} units")
 st.write(f"### Reorder Point: {round(reorder_point)} units")
 st.write(f"### Estimated Annual Inventory Cost: ${round(inventory_cost, 2)}")
 st.write(f"### Estimated Stock-Out Cost: ${round(stock_out_cost, 2)}")
-st.write(f"### Economic Order Quantity: ${round(eoq, 2)}")
+st.write(f"### Economic Order Quantity: {round(eoq, 0)}")
 
 # Visualization
 fig, axes = plt.subplots(3, 1, figsize=(8, 15))
