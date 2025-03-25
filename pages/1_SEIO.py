@@ -62,21 +62,36 @@ axes[0, 1].axvline(lead_time, color='r', linestyle='--', label="Mean Lead Time")
 axes[0, 1].set_title("Lead Time Distribution")
 axes[0, 1].legend()
 
-# Inventory Line Plot Simulation
+# Inventory Line Plot Simulation with Lead Time
 inventory_levels = []
 current_inventory = order_quantity
+order_pending = False
+lead_time_remaining = 0
 for day in range(simulation_days):
     daily_demand = np.random.normal(demand_mean, demand_std)
     current_inventory -= daily_demand
-    if current_inventory <= reorder_point:
-        current_inventory += order_quantity
+    
+    if order_pending:
+        lead_time_remaining -= 1
+        if lead_time_remaining <= 0:
+            current_inventory += order_quantity
+            order_pending = False
+    
+    if current_inventory <= reorder_point and not order_pending:
+        order_pending = True
+        lead_time_remaining = max(1, int(np.random.normal(lead_time, lead_time_std)))
+    
     inventory_levels.append(current_inventory)
+
+# calculate average inventory level
+average_inventory = sum(inventory_levels) / len(inventory_levels)
 
 # Inventory Bar Chart - Full Bottom Row
 ax_big = fig.add_subplot(2, 1, 2)
 ax_big.plot(range(simulation_days), inventory_levels, label="Inventory Level", color='blue')
 ax_big.axhline(safety_stock, color='green', linestyle='--', label="Safety Stock")
 ax_big.axhline(reorder_point, color='red', linestyle='--', label="Reorder Point")
+ax_big.axhline(average_inventory, color='black', linestyle='--', label="Avg. Inventory")
 ax_big.set_title("Inventory Over Time")
 ax_big.legend()
 
