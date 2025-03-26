@@ -132,6 +132,8 @@ st.pyplot(fig)
 # calc avg inventory
 avg_inventory = sum(total_inventory_levels) / len(total_inventory_levels)
 
+# Visualization of total inventory over time
+fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(range(simulation_days), total_inventory_levels, label="Total Inventory Over Time", marker='o')
 ax.axhline(avg_inventory, color='r', linestyle='--', label=f"Average Inventory: {avg_inventory:.2f}")
 ax.set_title("Total Inventory in System Over Time")
