@@ -120,7 +120,20 @@ for day in range(simulation_days):
     
     total_inventory_levels.append(total_inventory)
 
+for customer, inventory_levels in customer_inventory.items():
+    ax.plot(range(simulation_days), inventory_levels, label=f"{customer} Inventory")
+
+ax.set_title("Inventory Over Time Per Customer")
+ax.set_xlabel("Days")
+ax.set_ylabel("Inventory Level")
+ax.legend()
+st.pyplot(fig)
+
+# calc avg inventory
+avg_inventory = sum(total_inventory_levels) / len(total_inventory_levels)
+
 ax.plot(range(simulation_days), total_inventory_levels, label="Total Inventory Over Time", marker='o')
+ax.axhline(avg_inventory, color='r', linestyle='--', label=f"Average Inventory: {avg_inventory:.2f}")
 ax.set_title("Total Inventory in System Over Time")
 ax.set_xlabel("Days")
 ax.set_ylabel("Total Inventory")
