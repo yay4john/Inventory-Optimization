@@ -23,6 +23,7 @@ st.title("Multi-Echelon Inventory Optimization Tool")
 st.sidebar.header("Input Parameters")
 
 simulation_days = st.sidebar.number_input("Simulation Days", min_value=1, max_value=365, value=20)
+inventory_model = st.sidebar.selectbox("Inventory Model", ["Decentralized", "Centralized"], index=0)
 
 # Echelon 1 Table
 echelon1_data = {'Warehouse': ['WH1'], 'Holding $/Unit': [1.50]}
@@ -56,11 +57,18 @@ st.write("### Network Configuration")
 st.data_editor(network_df, num_rows='dynamic')
 
 # Compute Safety Stock, Reorder Point, and EOQ
-echelon2_df['Safety Stock'] = echelon2_df.apply(lambda row: calculate_safety_stock(
-    row['St. Dev. Demand'], 
-    network_df.loc[network_df['Customer'] == row['Customer'], 'Avg. Lead Time'].values[0],
-    network_df.loc[network_df['Customer'] == row['Customer'], 'St. Dev. Lead Time'].values[0],
-    row['Service Level']), axis=1)
+if inventory_model == "Decentralized":
+    echelon2_df['Safety Stock'] = echelon2_df.apply(lambda row: calculate_safety_stock(
+        row['St. Dev. Demand'], 
+        network_df.loc[network_df['Customer'] == row['Customer'], 'Avg. Lead Time'].values[0],
+        network_df.loc[network_df['Customer'] == row['Customer'], 'St. Dev. Lead Time'].values[0],
+        row['Service Level']), axis=1)
+else:  # Centralized model with risk pooling
+    pooled_demand_std = np.sqrt((echelon2_df['St. Dev. Demand'] ** 2).sum())
+    avg_lead_time = network_df['Avg. Lead Time'].mean()
+    std_lead_time = network_df['St. Dev. Lead Time'].mean()
+    pooled_safety_stock = calculate_safety_stock(pooled_demand_std, avg_lead_time, std_lead_time, echelon2_df['Service Level'].mean())
+    echelon2_df['Safety Stock'] = pooled_safety_stock / len(echelon2_df)
 
 echelon2_df['Reorder Point'] = echelon2_df.apply(lambda row: calculate_reorder_point(
     row['Avg. Demand'],
@@ -75,15 +83,14 @@ echelon2_df['EOQ'] = echelon2_df.apply(lambda row: calculate_eoq(
 st.write("### Calculated Inventory Levels")
 st.dataframe(echelon2_df[['Customer', 'Safety Stock', 'Reorder Point', 'EOQ']])
 
-# Simulation of inventory over time per customer with demand and lead time variability
+# Simulation of total inventory over time
 fig, ax = plt.subplots(figsize=(10, 6))
+total_inventory_levels = []
 customer_inventory = {customer: [] for customer in echelon2_df['Customer']}
 customer_current_inventory = echelon2_df.set_index('Customer')['Reorder Point'].to_dict()
 customer_order_quantity = echelon2_df.set_index('Customer')['EOQ'].to_dict()
 order_pending = {customer: False for customer in echelon2_df['Customer']}
 lead_time_remaining = {customer: 0 for customer in echelon2_df['Customer']}
-
-total_inventory_levels = []
 
 for day in range(simulation_days):
     total_inventory = 0
@@ -113,17 +120,6 @@ for day in range(simulation_days):
     
     total_inventory_levels.append(total_inventory)
 
-for customer, inventory_levels in customer_inventory.items():
-    ax.plot(range(simulation_days), inventory_levels, label=f"{customer} Inventory")
-
-ax.set_title("Inventory Over Time Per Customer")
-ax.set_xlabel("Days")
-ax.set_ylabel("Inventory Level")
-ax.legend()
-st.pyplot(fig)
-
-# Visualization of total inventory over time
-fig, ax = plt.subplots(figsize=(10, 6))
 ax.plot(range(simulation_days), total_inventory_levels, label="Total Inventory Over Time", marker='o')
 ax.set_title("Total Inventory in System Over Time")
 ax.set_xlabel("Days")
@@ -131,4 +127,4 @@ ax.set_ylabel("Total Inventory")
 ax.legend()
 st.pyplot(fig)
 
-st.write("Use the sidebar to adjust parameters and see the impact on inventory allocation, safety stock levels, and order quantities.")
+st.write("Use the sidebar to switch between centralized and decentralized models and see the impact on inventory allocation and risk pooling.")
