@@ -29,7 +29,7 @@ st.sidebar.header("Input Parameters")
 
 # User Inputs
 demand_mean = st.sidebar.number_input("Average Demand per Day", min_value=1, value=5)
-demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=1)
+demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=2)
 lead_time = st.sidebar.number_input("Lead Time (days)", min_value=0, value=2)
 lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=1)
 service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max_value=99.99, value=95.0)
