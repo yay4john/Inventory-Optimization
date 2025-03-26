@@ -8,116 +8,127 @@ import pandas as pd
 def calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level):
     z = stats.norm.ppf(service_level / 100)  # Convert service level percentage to Z-score
     safety_stock = z * np.sqrt((demand_std ** 2 * lead_time) + (demand_std ** 2 * lead_time_std ** 2))
-    return safety_stock
+    return int(safety_stock)
 
 # Function to calculate reorder point
 def calculate_reorder_point(demand_mean, lead_time, safety_stock):
-    return (demand_mean * lead_time) + safety_stock
+    return int((demand_mean * lead_time) + safety_stock)
 
-# Function to calculate inventory cost
-def calculate_inventory_cost(safety_stock, holding_cost_per_unit, order_cost, demand_mean, order_quantity):
-    holding_cost = safety_stock * holding_cost_per_unit
-    ordering_cost = (demand_mean / order_quantity) * order_cost
-    return holding_cost + ordering_cost
-
-# Function to calculate stock-out cost
-def calculate_stock_out_cost(stock_out_cost_per_unit, safety_stock, demand_mean):
-    expected_stockouts = max(0, demand_mean - safety_stock)
-    return expected_stockouts * stock_out_cost_per_unit
+# Function to calculate EOQ
+def calculate_eoq(demand_mean, order_cost, holding_cost):
+    return int(np.sqrt((2 * demand_mean * 365 * order_cost) / holding_cost))
 
 # Streamlit UI Setup
-st.title("Inventory Optimization Tool")
+st.title("Multi-Echelon Inventory Optimization Tool")
 st.sidebar.header("Input Parameters")
 
-# User Inputs
-demand_mean = st.sidebar.number_input("Average Demand per Period", min_value=1, value=100)
-demand_std = st.sidebar.number_input("Demand Standard Deviation", min_value=0, value=20)
-lead_time = st.sidebar.number_input("Lead Time (days)", min_value=1, value=5)
-lead_time_std = st.sidebar.number_input("Lead Time Standard Deviation", min_value=0, value=2)
-service_level = st.sidebar.number_input("Service Level (%)", min_value=50.0, max_value=99.99, value=95.0)
-holding_cost_per_unit = st.sidebar.number_input("Holding Cost per Unit ($)", min_value=0.01, value=1.0)
-order_cost = st.sidebar.number_input("Ordering Cost ($)", min_value=1.0, value=50.0)
-order_quantity = st.sidebar.number_input("Order Quantity", min_value=1, value=750)
-num_echelons = st.sidebar.number_input("Number of Echelons", min_value=1, value=2)
-stock_out_cost_per_unit = st.sidebar.number_input("Stock-Out Cost per Unit ($)", min_value=0.01, value=5.0)
-simulation_days = st.sidebar.number_input("Simulation Days", min_value=10, max_value=365, value=40)
+simulation_days = st.sidebar.number_input("Simulation Days", min_value=1, max_value=365, value=20)
 
 # Echelon 1 Table
-echelon1_df = pd.DataFrame(columns=['Warehouse', 'Holding $/Unit'])
+echelon1_data = {'Warehouse': ['WH1'], 'Holding $/Unit': [1.50]}
+echelon1_df = pd.DataFrame(echelon1_data)
 st.write("### Echelon 1: Warehouses")
 st.data_editor(echelon1_df, num_rows='dynamic')
 
 # Echelon 2 Table
-echelon2_df = pd.DataFrame(columns=['Customer', 'Avg. Demand', 'St. Dev. Demand', 'Holding $/Unit', 'Stock Out $/Unit', 'Service Level'])
+echelon2_data = {
+    'Customer': ['C1', 'C2'],
+    'Avg. Demand': [50, 40],
+    'St. Dev. Demand': [10, 8],
+    'Holding $/Unit': [2.00, 2.50],
+    'Stock Out $/Unit': [5.00, 6.00],
+    'Service Level': [95, 97]
+}
+echelon2_df = pd.DataFrame(echelon2_data)
 st.write("### Echelon 2: Customers")
 st.data_editor(echelon2_df, num_rows='dynamic')
 
 # Network Table
-network_df = pd.DataFrame(columns=['Warehouse', 'Customer', 'Order Cost', 'Avg. Lead Time', 'St. Dev. Lead Time'])
+network_data = {
+    'Warehouse': ['WH1', 'WH1'],
+    'Customer': ['C1', 'C2'],
+    'Order Cost': [10, 12],
+    'Avg. Lead Time': [3, 4],
+    'St. Dev. Lead Time': [1, 1.5]
+}
+network_df = pd.DataFrame(network_data)
 st.write("### Network Configuration")
 st.data_editor(network_df, num_rows='dynamic')
 
-# Compute Safety Stock and Reorder Point
-safety_stock = calculate_safety_stock(demand_std, lead_time, lead_time_std, service_level)
-reorder_point = calculate_reorder_point(demand_mean, lead_time, safety_stock)
-inventory_cost = calculate_inventory_cost(safety_stock, holding_cost_per_unit, order_cost, demand_mean, order_quantity)
-stock_out_cost = calculate_stock_out_cost(stock_out_cost_per_unit, safety_stock, demand_mean)
+# Compute Safety Stock, Reorder Point, and EOQ
+echelon2_df['Safety Stock'] = echelon2_df.apply(lambda row: calculate_safety_stock(
+    row['St. Dev. Demand'], 
+    network_df.loc[network_df['Customer'] == row['Customer'], 'Avg. Lead Time'].values[0],
+    network_df.loc[network_df['Customer'] == row['Customer'], 'St. Dev. Lead Time'].values[0],
+    row['Service Level']), axis=1)
 
-st.write(f"### Recommended Safety Stock: {round(safety_stock)} units")
-st.write(f"### Reorder Point: {round(reorder_point)} units")
-st.write(f"### Estimated Annual Inventory Cost: ${round(inventory_cost, 2)}")
-st.write(f"### Estimated Stock-Out Cost: ${round(stock_out_cost, 2)}")
+echelon2_df['Reorder Point'] = echelon2_df.apply(lambda row: calculate_reorder_point(
+    row['Avg. Demand'],
+    network_df.loc[network_df['Customer'] == row['Customer'], 'Avg. Lead Time'].values[0],
+    row['Safety Stock']), axis=1)
 
-# Visualization
-fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+echelon2_df['EOQ'] = echelon2_df.apply(lambda row: calculate_eoq(
+    row['Avg. Demand'],
+    network_df.loc[network_df['Customer'] == row['Customer'], 'Order Cost'].values[0],
+    row['Holding $/Unit']), axis=1)
 
-# Inventory Line Plot Simulation with Lead Time
-inventory_levels = []
-current_inventory = order_quantity
-order_pending = False
-lead_time_remaining = 0
+st.write("### Calculated Inventory Levels")
+st.dataframe(echelon2_df[['Customer', 'Safety Stock', 'Reorder Point', 'EOQ']])
+
+# Simulation of inventory over time per customer with demand and lead time variability
+fig, ax = plt.subplots(figsize=(10, 6))
+customer_inventory = {customer: [] for customer in echelon2_df['Customer']}
+customer_current_inventory = echelon2_df.set_index('Customer')['Reorder Point'].to_dict()
+customer_order_quantity = echelon2_df.set_index('Customer')['EOQ'].to_dict()
+order_pending = {customer: False for customer in echelon2_df['Customer']}
+lead_time_remaining = {customer: 0 for customer in echelon2_df['Customer']}
+
+total_inventory_levels = []
+
 for day in range(simulation_days):
-    daily_demand = np.random.normal(demand_mean, demand_std)
-    current_inventory -= daily_demand
+    total_inventory = 0
+    for customer in customer_inventory.keys():
+        customer_inventory[customer].append(customer_current_inventory[customer])
+        total_inventory += customer_current_inventory[customer]
+        
+        if order_pending[customer]:
+            lead_time_remaining[customer] -= 1
+            if lead_time_remaining[customer] <= 0:
+                customer_current_inventory[customer] += customer_order_quantity[customer]
+                order_pending[customer] = False
+        
+        daily_demand = np.random.normal(
+            echelon2_df.loc[echelon2_df['Customer'] == customer, 'Avg. Demand'].values[0],
+            echelon2_df.loc[echelon2_df['Customer'] == customer, 'St. Dev. Demand'].values[0]
+        )
+        
+        customer_current_inventory[customer] = max(0, customer_current_inventory[customer] - daily_demand)
+        
+        if customer_current_inventory[customer] <= echelon2_df.loc[echelon2_df['Customer'] == customer, 'Reorder Point'].values[0] and not order_pending[customer]:
+            order_pending[customer] = True
+            lead_time_remaining[customer] = int(np.random.normal(
+                network_df.loc[network_df['Customer'] == customer, 'Avg. Lead Time'].values[0],
+                network_df.loc[network_df['Customer'] == customer, 'St. Dev. Lead Time'].values[0]
+            ))
     
-    if order_pending:
-        lead_time_remaining -= 1
-        if lead_time_remaining <= 0:
-            current_inventory += order_quantity
-            order_pending = False
-    
-    if current_inventory <= reorder_point and not order_pending:
-        order_pending = True
-        lead_time_remaining = max(1, int(np.random.normal(lead_time, lead_time_std)))
-    
-    inventory_levels.append(current_inventory)
+    total_inventory_levels.append(total_inventory)
 
-axes[0].plot(range(simulation_days), inventory_levels, label="Inventory Level", color='blue')
-axes[0].axhline(safety_stock, color='green', linestyle='--', label="Safety Stock")
-axes[0].axhline(reorder_point, color='red', linestyle='--', label="Reorder Point")
-axes[0].set_title("Inventory Over Time")
-axes[0].legend()
+for customer, inventory_levels in customer_inventory.items():
+    ax.plot(range(simulation_days), inventory_levels, label=f"{customer} Inventory")
 
-# Cost Comparison Bar Chart
-axes[1].barh(["Holding Cost", "Stock-Out Cost"], [inventory_cost, stock_out_cost], color=['blue', 'red'])
-axes[1].set_title("Cost Comparison")
-axes[1].set_xlabel("Cost ($)")
-
-# EOQ Tradeoff Chart
-quantity = np.linspace(1, 2000, 100)
-holding_cost = (holding_cost_per_unit * quantity) / 2
-ordering_cost = (order_cost * demand_mean) / quantity
-total_cost = holding_cost + ordering_cost
-eoq = np.sqrt((2 * demand_mean * order_cost) / holding_cost_per_unit)
-
-axes[2].plot(quantity, holding_cost, label="Holding Cost", color='blue')
-axes[2].plot(quantity, ordering_cost, label="Ordering Cost", color='red')
-axes[2].plot(quantity, total_cost, label="Total Cost", color='black', linestyle='dashed')
-axes[2].axvline(eoq, color='cyan', linestyle='--', label="EOQ")
-axes[2].set_title("EOQ Tradeoff Chart")
-axes[2].legend()
-
-plt.tight_layout()
+ax.set_title("Inventory Over Time Per Customer")
+ax.set_xlabel("Days")
+ax.set_ylabel("Inventory Level")
+ax.legend()
 st.pyplot(fig)
 
-st.write("Use the sidebar to adjust parameters and see the impact on inventory levels, safety stock, reorder point, and costs.")
+# Visualization of total inventory over time
+fig, ax = plt.subplots(figsize=(10, 6))
+ax.plot(range(simulation_days), total_inventory_levels, label="Total Inventory Over Time", marker='o')
+ax.set_title("Total Inventory in System Over Time")
+ax.set_xlabel("Days")
+ax.set_ylabel("Total Inventory")
+ax.legend()
+st.pyplot(fig)
+
+st.write("Use the sidebar to adjust parameters and see the impact on inventory allocation, safety stock levels, and order quantities.")
